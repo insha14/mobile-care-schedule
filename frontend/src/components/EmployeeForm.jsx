@@ -23,13 +23,13 @@ export default function EmployeeForm() {
   const [status, setStatus] = useState(null)
 
   useEffect(() => {
-    fetch('${API_BASE}/api/employees')
+    fetch(`${API_BASE}/api/employees`)
       .then(r => r.json())
       .then(setEmployees)
   }, [])
 
   useEffect(() => {
-    fetch('${API_BASE}/api/stores')
+    fetch(`${API_BASE}/api/stores`)
       .then(r => r.json())
       .then(setStores)
       .catch(() => setStores([]))
@@ -58,7 +58,7 @@ export default function EmployeeForm() {
       }
     }
 
-    const res = await fetch('${API_BASE}/api/restrictions', {
+    const res = await fetch(`${API_BASE}/api/restrictions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
