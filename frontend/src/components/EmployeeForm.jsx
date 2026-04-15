@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+const API_BASE = import.meta.env.VITE_API_URL || '${API_BASE}'
 
 function nextMondayISO() {
   const d = new Date()
@@ -22,13 +23,13 @@ export default function EmployeeForm() {
   const [status, setStatus] = useState(null)
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/employees')
+    fetch('${API_BASE}/api/employees')
       .then(r => r.json())
       .then(setEmployees)
   }, [])
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/stores')
+    fetch('${API_BASE}/api/stores')
       .then(r => r.json())
       .then(setStores)
       .catch(() => setStores([]))
@@ -57,7 +58,7 @@ export default function EmployeeForm() {
       }
     }
 
-    const res = await fetch('http://localhost:4000/api/restrictions', {
+    const res = await fetch('${API_BASE}/api/restrictions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)

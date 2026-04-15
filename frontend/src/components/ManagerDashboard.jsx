@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+const API_BASE = import.meta.env.VITE_API_URL || '${API_BASE}'
 
 function formatOffDay(r) {
   if (!r.offDay) return 'No off day selected'
@@ -27,8 +28,8 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     if (!week) return
-    fetch(`http://localhost:4000/api/restrictions?week=${week}`).then(r => r.json()).then(setRestrictions)
-    fetch(`http://localhost:4000/api/missing?week=${week}`).then(r => r.json()).then(setMissing)
+    fetch(`${API_BASE}/api/restrictions?week=${week}`).then(r => r.json()).then(setRestrictions)
+    fetch(`${API_BASE}/api/missing?week=${week}`).then(r => r.json()).then(setMissing)
   }, [week])
 
   return (
