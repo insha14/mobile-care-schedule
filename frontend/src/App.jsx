@@ -1,9 +1,13 @@
 import React, { useState } from 'react'
 import EmployeeForm from './components/EmployeeForm'
+import EmployeeLogin from './components/EmployeeLogin'
 import ManagerDashboard from './components/ManagerDashboard'
+import ManagerLogin from './components/ManagerLogin'
 
 export default function App() {
   const [view, setView] = useState('form')
+  const [managerPasscode, setManagerPasscode] = useState(null)
+  const [employee, setEmployee] = useState(null)
 
   return (
     <div className="app">
@@ -16,7 +20,11 @@ export default function App() {
       </header>
 
       <main>
-        {view === 'form' ? <EmployeeForm /> : <ManagerDashboard />}
+        {view === 'form' ? (
+          employee ? <EmployeeForm employee={employee} onLogout={() => setEmployee(null)} /> : <EmployeeLogin onSuccess={(employee, pin) => setEmployee({ ...employee, pin })} />
+        ) : (
+          managerPasscode ? <ManagerDashboard managerPasscode={managerPasscode} /> : <ManagerLogin onSuccess={p => setManagerPasscode(p)} />
+        )}
       </main>
 
       <footer className="footer">Designed for mobile use — share the form link via WhatsApp</footer>

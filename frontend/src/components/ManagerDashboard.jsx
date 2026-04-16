@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-const API_BASE = import.meta.env.VITE_API_URL || '${API_BASE}'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 function formatOffDay(r) {
   if (!r.offDay) return 'No off day selected'
@@ -12,7 +12,7 @@ function formatOffDay(r) {
   }
 }
 
-export default function ManagerDashboard() {
+export default function ManagerDashboard({ managerPasscode }) {
   const [week, setWeek] = useState('')
   const [restrictions, setRestrictions] = useState([])
   const [missing, setMissing] = useState([])
@@ -28,9 +28,28 @@ export default function ManagerDashboard() {
 
   useEffect(() => {
     if (!week) return
-    fetch(`${API_BASE}/api/restrictions?week=${week}`).then(r => r.json()).then(setRestrictions)
+    const passQuery = managerPasscode ? `&passcode=${encodeURIComponent(managerPasscode)}` : ''
+    fetch(`${API_BASE}/api/restrictions?week=${week}${passQuery}`).then(r => r.json()).then(setRestrictions)
     fetch(`${API_BASE}/api/missing?week=${week}`).then(r => r.json()).then(setMissing)
-  }, [week])
+  }, [week, managerPasscode])
+
+  async function handleDelete(id) {
+    if (!managerPasscode) {
+      alert('Manager passcode missing')
+      return
+    }
+    const ok = window.confirm('Delete this restriction? This cannot be undone.')
+    if (!ok) return
+    const res = await fetch(`${API_BASE}/api/restrictions/${id}?passcode=${encodeURIComponent(managerPasscode)}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      alert(data.error || 'Delete failed')
+      return
+    }
+    // refresh list for the current week
+    const passQuery = `&passcode=${encodeURIComponent(managerPasscode)}`
+    fetch(`${API_BASE}/api/restrictions?week=${week}${passQuery}`).then(r => r.json()).then(setRestrictions)
+  }
 
   return (
     <div className="dashboard">
@@ -49,6 +68,9 @@ export default function ManagerDashboard() {
               <div className="muted">{formatOffDay(r)}</div>
               {r.storePreference && <div>Store pref: {r.storePreference}</div>}
               {r.notes && <div className="muted">Notes: {r.notes}</div>}
+              <div style={{ marginTop: '8px' }}>
+                <button className="danger" onClick={() => handleDelete(r.id)}>Delete</button>
+              </div>
             </div>
           ))}
         </div>

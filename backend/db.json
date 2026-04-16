@@ -25,71 +25,68 @@
       "name": "Alisha",
       "role": "manager",
       "homeStore": "Perimeter Mall",
-      "canRotate": false
+      "canRotate": false,
+      "pin": "1001"
     },
     {
       "id": "m2",
       "name": "Ankush",
       "role": "manager",
       "homeStore": "Southlake Mall",
-      "canRotate": false
+      "canRotate": false,
+      "pin": "1002"
     },
     {
       "id": "m3",
       "name": "Insha",
       "role": "manager",
       "homeStore": "Cumberland Mall",
-      "canRotate": false
+      "canRotate": false,
+      "pin": "1003"
     },
     {
       "id": "e1",
       "name": "Zarine",
       "role": "employee",
       "homeStore": null,
-      "canRotate": true
+      "canRotate": true,
+      "pin": "1111"
     },
     {
       "id": "e2",
       "name": "Rehan",
       "role": "employee",
       "homeStore": null,
-      "canRotate": true
+      "canRotate": true,
+      "pin": "2222"
     },
     {
       "id": "e3",
       "name": "Omar",
       "role": "employee",
       "homeStore": null,
-      "canRotate": true
+      "canRotate": true,
+      "pin": "3333"
     },
     {
       "id": "b1",
       "name": "Corey",
       "role": "backup",
       "homeStore": null,
-      "canRotate": true
+      "canRotate": true,
+      "pin": "4444"
     }
   ],
   "restrictions": [
     {
-      "id": "c826870c-92e0-469e-b540-1d938ed08387",
-      "employeeId": "e1",
-      "employeeName": "Zarine",
-      "weekStart": "2026-04-20",
-      "offDay": "2026-04-25",
+      "id": "035f0c8f-92f9-4458-bc9b-675a7615e2f1",
+      "employeeId": "m3",
+      "employeeName": "Insha",
+      "weekStart": "2026-04-27",
+      "offDay": "2026-05-02",
       "notes": null,
-      "storePreference": "Perimeter Mall",
-      "createdAt": "2026-04-15T17:01:46.398Z"
-    },
-    {
-      "id": "98c65b2e-1d91-4415-a493-e5176655892d",
-      "employeeId": "m1",
-      "employeeName": "Alisha",
-      "weekStart": "2026-04-20",
-      "offDay": "2026-04-25",
-      "notes": null,
-      "storePreference": "Perimeter Mall",
-      "createdAt": "2026-04-15T17:06:14.088Z"
+      "storePreference": null,
+      "createdAt": "2026-04-15T23:48:49.032Z"
     }
   ]
 }
