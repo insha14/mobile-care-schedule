@@ -51,39 +51,22 @@ export default function EmployeeForm({ employee, onLogout }) {
   }, [employee.id, employee.pin])
 
   useEffect(() => {
+    // Reset form after successful submit
     if (skipNextLoad) {
       setSkipNextLoad(false)
-      return
-    }
-    if (!form.weekStart || !employee.pin) return
-    const existing = employeeEntries.find(r => r.weekStart === form.weekStart)
-    if (existing) {
+      // Reset form to fresh state for next entry
       setForm({
-        weekStart: existing.weekStart,
-        offDay: existing.offDay || '',
-        notes: existing.notes || '',
-        storePreference: existing.storePreference || ''
+        weekStart: nextMondayISO(),
+        offDay: '',
+        notes: '',
+        storePreference: ''
       })
-      setExistingId(existing.id)
-      if (currentEntryId !== existing.id) {
-        if (form.weekStart !== justCreatedWeek) {
-          setEditingMessage(`Editing entry for week of ${existing.weekStart}`)
-          setStatus({ success: 'Existing entry loaded' })
-        } else {
-          // Just created, keep the success message from submit, don't set editing mode
-          setEditingMessage('')
-          // Do not set status here to preserve the success message
-        }
-      }
-      setCurrentEntryId(existing.id)
-    } else {
-      setExistingId(null)
       setCurrentEntryId(null)
+      setExistingId(null)
+      setJustCreatedWeek(null)
       setEditingMessage('')
-      setStatus(null)
-      setForm(prev => ({ ...prev, offDay: '', notes: '', storePreference: '' }))
     }
-  }, [form.weekStart, employee.pin, employeeEntries, skipNextLoad, justCreatedWeek, currentEntryId])
+  }, [skipNextLoad])
 
   function handleChange(e) {
     const { name, value } = e.target
@@ -91,6 +74,7 @@ export default function EmployeeForm({ employee, onLogout }) {
     if (name === 'weekStart') {
       setJustCreatedWeek(null)
     }
+    // If user changes form while in edit mode, we keep editing that specific entry by id
   }
 
   async function handleSubmit(e) {
@@ -109,7 +93,25 @@ export default function EmployeeForm({ employee, onLogout }) {
       }
     }
 
+    // Check for duplicate only if creating new (not editing)
+    if (!currentEntryId) {
+      const duplicate = employeeEntries.find(e =>
+        e.weekStart === form.weekStart &&
+        e.offDay === form.offDay
+      )
+      if (duplicate) {
+        setStatus({ error: 'A request for this day already exists for that week' })
+        return
+      }
+    }
+
     const payload = { ...form, employeeId: employee.id, pin: employee.pin }
+    // Include id if editing an existing entry
+    if (currentEntryId) {
+      payload.id = currentEntryId
+    }
+
+    console.log('Submitting payload:', payload, 'currentEntryId:', currentEntryId)
     const res = await fetch(`${API_BASE}/api/restrictions`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -128,57 +130,34 @@ export default function EmployeeForm({ employee, onLogout }) {
     setEmployeeEntries(prev => {
       const existingIndex = prev.findIndex(e => e.id === newRestriction.id)
       if (existingIndex >= 0) {
-        // Update existing
+        // Update existing (editing mode)
         const updated = [...prev]
         updated[existingIndex] = newRestriction
-        return updated.sort((a, b) => b.weekStart.localeCompare(a.weekStart))
+        return updated.sort((a, b) => (b.createdAt || b.weekStart).localeCompare(a.createdAt || a.weekStart))
       } else {
         // Add new
-        return [newRestriction, ...prev].sort((a, b) => b.weekStart.localeCompare(a.weekStart))
+        return [newRestriction, ...prev].sort((a, b) => (b.createdAt || b.weekStart).localeCompare(a.createdAt || a.weekStart))
       }
     })
-    if (wasNew) {
-      setJustCreatedWeek(form.weekStart)
-    }
     // Refetch in background for consistency
     fetchEntries()
-    setExistingId(data.restriction?.id || null)
-    setCurrentEntryId(data.restriction?.id || null)
+    setCurrentEntryId(null)
+setExistingId(null)
+setForm({
+  weekStart: form.weekStart,
+  offDay: '',
+  notes: '',
+  storePreference: ''
+})
     setSkipNextLoad(true)
   }
 
-  async function handleSelfDelete(weekToDelete) {
-    const week = weekToDelete || form.weekStart
-    if (!week) {
-      setStatus({ error: 'Select week to delete.' })
+  function handleEdit(entry) {
+    // Only allow editing pending requests
+    if (entry.status && entry.status !== 'pending') {
+      setStatus({ error: 'Only pending requests can be edited' })
       return
     }
-    const ok = window.confirm('Delete your entry for this week? This cannot be undone.')
-    if (!ok) return
-    try {
-      const res = await fetch(`${API_BASE}/api/restrictions/self?employeeId=${encodeURIComponent(employee.id)}&week=${encodeURIComponent(week)}&pin=${encodeURIComponent(employee.pin)}`, { method: 'DELETE' })
-      const data = await res.json()
-      if (!res.ok) {
-        setStatus({ error: data.error || 'Delete failed' })
-        return
-      }
-      setStatus({ success: 'Your entry was deleted' })
-      setEditingMessage('')
-      // Immediately update local state for instant UI feedback
-      setEmployeeEntries(prev => prev.filter(e => !(e.employeeId === employee.id && e.weekStart === week)))
-      // Refetch in background for consistency
-      fetchEntries()
-      if (week === form.weekStart) {
-        setForm(prev => ({ ...prev, offDay: '', notes: '', storePreference: '' }))
-        setExistingId(null)
-        setCurrentEntryId(null)
-      }
-    } catch (err) {
-      setStatus({ error: 'Network error' })
-    }
-  }
-
-  function handleEdit(entry) {
     setForm({
       weekStart: entry.weekStart,
       offDay: entry.offDay || '',
@@ -190,6 +169,8 @@ export default function EmployeeForm({ employee, onLogout }) {
     setJustCreatedWeek(null)
     setEditingMessage(`Editing entry for week of ${entry.weekStart}`)
     setStatus({ success: `Editing entry for week of ${entry.weekStart}` })
+    // Ensure form doesn't get reset while editing
+    setSkipNextLoad(false)
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
@@ -228,18 +209,23 @@ export default function EmployeeForm({ employee, onLogout }) {
       </form>
 
       <div className="card">
-        <h3>My Entries</h3>
-        <div style={{ maxHeight: '320px', overflowY: 'auto', paddingRight: '8px' }}>
+        <h3>My Entries (Last 10)</h3>
+        <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '8px' }}>
           {employeeEntries.length === 0 && <p>No entries yet.</p>}
-          {employeeEntries.map(entry => (
+          {employeeEntries.slice(0, 10).map(entry => (
             <div key={entry.id} className="card small" style={{ marginBottom: 10 }}>
-              <strong>Week of {entry.weekStart}</strong>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong>Week of {entry.weekStart}</strong>
+                <span className={`badge ${entry.status || 'pending'}`}>{entry.status || 'pending'}</span>
+              </div>
               <div>{entry.offDay ? `Off day: ${entry.offDay}` : 'No off day set'}</div>
               {entry.storePreference && <div>Store preference: {entry.storePreference}</div>}
               {entry.notes && <div className="muted">Notes: {entry.notes}</div>}
+              {entry.managerNote && <div className="muted">Manager note: {entry.managerNote}</div>}
               <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                <button type="button" className="secondary" onClick={() => handleEdit(entry)}>Edit</button>
-                <button type="button" className="danger" onClick={() => handleSelfDelete(entry.weekStart)}>Delete</button>
+                {(entry.status === 'pending' || !entry.status) && (
+                  <button type="button" className="secondary" onClick={() => handleEdit(entry)}>Edit</button>
+                )}
               </div>
             </div>
           ))}

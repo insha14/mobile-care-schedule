@@ -12,6 +12,15 @@ function formatOffDay(r) {
   }
 }
 
+function groupByStatus(restrictions) {
+  const groups = { pending: [], approved: [], denied: [] }
+  restrictions.forEach(r => {
+    const status = r.status || 'pending'
+    groups[status].push(r)
+  })
+  return groups
+}
+
 export default function ManagerDashboard({ managerPasscode }) {
   const [week, setWeek] = useState('')
   const [restrictions, setRestrictions] = useState([])
@@ -28,28 +37,41 @@ export default function ManagerDashboard({ managerPasscode }) {
 
   useEffect(() => {
     if (!week) return
-    const passQuery = managerPasscode ? `&passcode=${encodeURIComponent(managerPasscode)}` : ''
-    fetch(`${API_BASE}/api/restrictions?week=${week}${passQuery}`).then(r => r.json()).then(setRestrictions)
-    fetch(`${API_BASE}/api/missing?week=${week}`).then(r => r.json()).then(setMissing)
+    fetch(`${API_BASE}/api/restrictions?week=${week}&passcode=${encodeURIComponent(managerPasscode)}`)
+      .then(r => r.json())
+      .then(setRestrictions)
+      .catch(() => setRestrictions([]))
+    fetch(`${API_BASE}/api/missing?week=${week}`)
+      .then(r => r.json())
+      .then(setMissing)
+      .catch(() => setMissing([]))
   }, [week, managerPasscode])
 
-  async function handleDelete(id) {
-    if (!managerPasscode) {
-      alert('Manager passcode missing')
-      return
-    }
-    const ok = window.confirm('Delete this restriction? This cannot be undone.')
-    if (!ok) return
-    const res = await fetch(`${API_BASE}/api/restrictions/${id}?passcode=${encodeURIComponent(managerPasscode)}`, { method: 'DELETE' })
+  async function handleApprove(id) {
+    const res = await fetch(`${API_BASE}/api/restrictions/${id}/approve?passcode=${encodeURIComponent(managerPasscode)}`, { method: 'PUT' })
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      alert(data.error || 'Delete failed')
+      alert('Approve failed')
       return
     }
-    // refresh list for the current week
-    const passQuery = `&passcode=${encodeURIComponent(managerPasscode)}`
-    fetch(`${API_BASE}/api/restrictions?week=${week}${passQuery}`).then(r => r.json()).then(setRestrictions)
+    // refresh
+    fetch(`${API_BASE}/api/restrictions?week=${week}&passcode=${encodeURIComponent(managerPasscode)}`)
+      .then(r => r.json())
+      .then(setRestrictions)
   }
+
+  async function handleDeny(id) {
+    const res = await fetch(`${API_BASE}/api/restrictions/${id}/deny?passcode=${encodeURIComponent(managerPasscode)}`, { method: 'PUT' })
+    if (!res.ok) {
+      alert('Deny failed')
+      return
+    }
+    // refresh
+    fetch(`${API_BASE}/api/restrictions?week=${week}&passcode=${encodeURIComponent(managerPasscode)}`)
+      .then(r => r.json())
+      .then(setRestrictions)
+  }
+
+  const groups = groupByStatus(restrictions)
 
   return (
     <div className="dashboard">
@@ -59,18 +81,49 @@ export default function ManagerDashboard({ managerPasscode }) {
       </div>
 
       <div className="card">
-        <h3>Restrictions for week starting {week}</h3>
-        {restrictions.length === 0 && <p>No submissions yet for this week.</p>}
+        <h3>Pending Requests</h3>
+        {groups.pending.length === 0 && <p>No pending requests.</p>}
         <div className="grid">
-          {restrictions.map(r => (
+          {groups.pending.map(r => (
             <div key={r.id} className="card small">
               <strong>{r.employeeName}</strong>
               <div className="muted">{formatOffDay(r)}</div>
               {r.storePreference && <div>Store pref: {r.storePreference}</div>}
               {r.notes && <div className="muted">Notes: {r.notes}</div>}
-              <div style={{ marginTop: '8px' }}>
-                <button className="danger" onClick={() => handleDelete(r.id)}>Delete</button>
+              <div style={{ marginTop: '8px', display: 'flex', gap: 8 }}>
+                <button className="primary" style={{ flex: 1 }} onClick={() => handleApprove(r.id)}>Approve</button>
+                <button className="danger" style={{ flex: 1 }} onClick={() => handleDeny(r.id)}>Deny</button>
               </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Approved Requests</h3>
+        {groups.approved.length === 0 && <p>No approved requests.</p>}
+        <div className="grid">
+          {groups.approved.map(r => (
+            <div key={r.id} className="card small">
+              <strong>{r.employeeName}</strong>
+              <div className="muted">{formatOffDay(r)}</div>
+              {r.storePreference && <div>Store pref: {r.storePreference}</div>}
+              {r.notes && <div className="muted">Notes: {r.notes}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Denied Requests</h3>
+        {groups.denied.length === 0 && <p>No denied requests.</p>}
+        <div className="grid">
+          {groups.denied.map(r => (
+            <div key={r.id} className="card small">
+              <strong>{r.employeeName}</strong>
+              <div className="muted">{formatOffDay(r)}</div>
+              {r.storePreference && <div>Store pref: {r.storePreference}</div>}
+              {r.notes && <div className="muted">Notes: {r.notes}</div>}
             </div>
           ))}
         </div>

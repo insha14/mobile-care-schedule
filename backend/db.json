@@ -87,6 +87,63 @@
       "notes": null,
       "storePreference": null,
       "createdAt": "2026-04-15T23:48:49.032Z"
+    },
+    {
+      "id": "6113b411-a368-4f75-9b0d-86972827e274",
+      "employeeId": "e1",
+      "employeeName": "Zarine",
+      "weekStart": "2026-04-20",
+      "offDay": "2026-04-23",
+      "notes": null,
+      "storePreference": null,
+      "status": "approved",
+      "reviewedAt": "2026-04-16T22:32:55.971Z",
+      "reviewedBy": "Manager",
+      "managerNote": null,
+      "createdAt": "2026-04-16T20:58:40.333Z",
+      "updatedAt": "2026-04-16T22:22:24.617Z"
+    },
+    {
+      "id": "8d749eb1-bbdd-4eff-8905-521ad9a4192c",
+      "employeeId": "e1",
+      "employeeName": "Zarine",
+      "weekStart": "2026-04-20",
+      "offDay": "2026-04-24",
+      "notes": null,
+      "storePreference": null,
+      "status": "denied",
+      "reviewedAt": "2026-04-16T22:34:09.526Z",
+      "reviewedBy": "Manager",
+      "managerNote": null,
+      "createdAt": "2026-04-16T22:33:03.497Z"
+    },
+    {
+      "id": "3ec93e01-9a57-4e44-bb7b-0c51adfcf6f6",
+      "employeeId": "e1",
+      "employeeName": "Zarine",
+      "weekStart": "2026-04-20",
+      "offDay": "2026-04-21",
+      "notes": null,
+      "storePreference": null,
+      "status": "approved",
+      "reviewedAt": "2026-04-16T22:35:55.499Z",
+      "reviewedBy": "Manager",
+      "managerNote": null,
+      "createdAt": "2026-04-16T22:34:20.016Z"
+    },
+    {
+      "id": "fb9b4e5a-6282-4775-80e2-11ebd5b4f520",
+      "employeeId": "e1",
+      "employeeName": "Zarine",
+      "weekStart": "2026-04-20",
+      "offDay": "2026-04-20",
+      "notes": null,
+      "storePreference": null,
+      "status": "pending",
+      "reviewedAt": null,
+      "reviewedBy": null,
+      "managerNote": null,
+      "createdAt": "2026-04-16T22:36:03.174Z"
     }
   ]
 }
