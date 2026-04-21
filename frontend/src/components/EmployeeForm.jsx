@@ -10,6 +10,13 @@ function nextMondayISO() {
   return d.toISOString().slice(0, 10)
 }
 
+function formatOffDay(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const weekday = date.toLocaleDateString(undefined, { weekday: 'long' })
+  return `${weekday}, ${dateStr}`
+}
+
 export default function EmployeeForm({ employee, onLogout }) {
   const formRef = useRef(null)
   const [stores, setStores] = useState([])
@@ -214,18 +221,20 @@ setForm({
           {employeeEntries.length === 0 && <p>No entries yet.</p>}
           {employeeEntries.slice(0, 10).map(entry => (
             <div key={entry.id} className="card small" style={{ marginBottom: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <strong>Week of {entry.weekStart}</strong>
-                <span className={`badge ${entry.status || 'pending'}`}>{entry.status || 'pending'}</span>
-              </div>
-              <div>{entry.offDay ? `Off day: ${entry.offDay}` : 'No off day set'}</div>
-              {entry.storePreference && <div>Store preference: {entry.storePreference}</div>}
-              {entry.notes && <div className="muted">Notes: {entry.notes}</div>}
-              {entry.managerNote && <div className="muted">Manager note: {entry.managerNote}</div>}
-              <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-                {(entry.status === 'pending' || !entry.status) && (
-                  <button type="button" className="secondary" onClick={() => handleEdit(entry)}>Edit</button>
-                )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <strong>Week of {entry.weekStart}</strong>
+                  <div style={{ marginTop: 6 }}>{entry.offDay ? `Off day: ${formatOffDay(entry.offDay)}` : 'No off day set'}</div>
+                  {entry.storePreference && <div>Store preference: {entry.storePreference}</div>}
+                  {entry.notes && <div className="muted">Notes: {entry.notes}</div>}
+                  {entry.managerNote && <div className="muted">Manager note: {entry.managerNote}</div>}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8, flexShrink: 0, flexWrap: 'wrap' }}>
+                  <span className={`badge ${entry.status || 'pending'}`}>{entry.status || 'pending'}</span>
+                  {(entry.status === 'pending' || !entry.status) && (
+                    <button type="button" className="secondary" onClick={() => handleEdit(entry)}>Edit</button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
